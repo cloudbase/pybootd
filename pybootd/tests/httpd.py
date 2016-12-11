@@ -19,8 +19,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import sys
-import urlparse
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from six.moves.urllib import parse
+from six.moves.BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from optparse import OptionParser
 from util import logger_factory, to_bool, to_int, EasyConfigParser
 
@@ -33,8 +33,8 @@ class HttpdDaemon(HTTPServer):
             log = self.server.log
             log.debug("GET from %s:%d" % self.client_address)
             log.debug("Request: %s" % self.path)
-            urlparts = urlparse.urlsplit(self.path)
-            query = urlparse.parse_qs(urlparts.query)
+            urlparts = parse.urlsplit(self.path)
+            query = parse.parse_qs(urlparts.query)
             if urlparts.path in ('/boot', '/linux'):
                 if 'uuid' in query:
                     uuids = query['uuid']
@@ -105,4 +105,4 @@ if __name__ == "__main__":
             import time
             time.sleep(5)
     except KeyboardInterrupt:
-        print "Aborting..."
+        print("Aborting...")

@@ -18,13 +18,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from array import array
-import commands
 import logging
 import re
 import socket
 import struct
+import subprocess
 import sys
-from ConfigParser import SafeConfigParser
+
+from six.moves.configparser import SafeConfigParser
 from six import PY3, integer_types, binary_type
 
 try:
@@ -212,8 +213,10 @@ def _netifaces_get_iface_config(address):
 
 def _iproute_get_iface_config(address):
     pool = iptoint(address)
+    iplines = []
     iplines = (line.strip()
-               for line in commands.getoutput("ip address show").split('\n'))
+               for line in subprocess.check_output(
+               "ip address show".split(" ")).rstrip("\n").split('\n'))
     iface = None
     for l in iplines:
         items = l.split()
@@ -248,7 +251,7 @@ def get_iface_config(address):
 class EasyConfigParser(SafeConfigParser):
     "ConfigParser extension to support default config values"
 
-    def get(self, section, option, default=None):
+    def get_opt(self, section, option, default=None):
         if not self.has_section(section):
             return default
         if not self.has_option(section, option):

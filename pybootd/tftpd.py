@@ -25,13 +25,15 @@ import string
 import struct
 import sys
 import time
-import thread
-import urllib2
-import urlparse
-from ConfigParser import NoSectionError
-from cStringIO import StringIO
 from pybootd import pybootd_path
-from util import hexline
+from pybootd.util import hexline
+
+from six.moves import _thread as thread
+from six.moves.configparser import NoSectionError
+from six.moves import cStringIO as StringIO
+from six.moves.urllib import parse
+from six.moves.urllib import request
+
 
 __all__ = ['TftpServer']
 
@@ -217,7 +219,7 @@ class TftpConnection(object):
                 else:
                     raise TftpError(5, 'Invalid opcode')
             self.log.debug('End of active: %s:%s' % addr)
-        except TftpError, detail:
+        except TftpError as detail:
             self.send_error(detail[0], detail[1])
         except:
             import traceback
@@ -310,7 +312,7 @@ class TftpConnection(object):
             else:
                 try:
                     if self.is_url(resource):
-                        rp = urllib2.urlopen(resource)
+                        rp = request.urlopen(resource)
                         meta = rp.info()
                         filesize = int(meta.getheaders('Content-Length')[0])
                     else:
@@ -333,7 +335,7 @@ class TftpConnection(object):
             try:
                 if self.is_url(resource):
                     self.log.info("Sending resource '%s'" % resource)
-                    self.file = urllib2.urlopen(resource)
+                    self.file = request.urlopen(resource)
                 else:
                     resource = os.path.realpath(resource)
                     self.log.info("Sending file '%s'" % resource)
@@ -379,7 +381,7 @@ class TftpConnection(object):
 
     @staticmethod
     def is_url(path):
-        return bool(urlparse.urlsplit(path).scheme)
+        return bool(parse.urlsplit(path).scheme)
 
 
 class TftpServer:
@@ -393,20 +395,20 @@ class TftpServer:
         self.config = config
         self.sock = []
         self.bootpd = bootpd
-        self.blocksize = int(self.config.get('tftp', 'blocksize', '512'))
-        self.timeout = float(self.config.get('tftp', 'timeout', '2.0'))
-        self.retry = int(self.config.get('tftp', 'blocksize', '5'))
-        self.root = self.config.get('tftp', 'root', os.getcwd())
+        self.blocksize = int(self.config.get_opt('tftp', 'blocksize', '512'))
+        self.timeout = float(self.config.get_opt('tftp', 'timeout', '2.0'))
+        self.retry = int(self.config.get_opt('tftp', 'blocksize', '5'))
+        self.root = self.config.get_opt('tftp', 'root', os.getcwd())
         self.fcre, self.filepatterns = self.get_file_filters()
         self.genfilecre = re.compile(r'\[(?P<name>[\w\.\-]+)\]')
 
     def bind(self):
         netconfig = self.bootpd and self.bootpd.get_netconfig()
-        host = self.config.get('tftp', 'address',
-                               netconfig and netconfig['server'])
+        host = self.config.get_opt('tftp', 'address',
+                                   netconfig and netconfig['server'])
         if not host:
             raise TftpError('TFTP address no defined')
-        port = int(self.config.get('tftp', 'port', str(TFTP_PORT)))
+        port = int(self.config.get_opt('tftp', 'port', str(TFTP_PORT)))
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.append(sock)
         sock.bind((host, port))
@@ -440,7 +442,7 @@ class TftpServer:
         replacements = {}
         try:
             for pos, pattern in enumerate(self.config.options('filters'), 1):
-                value = self.config.get('filters', pattern).strip()
+                value = self.config.get_opt('filters', pattern).strip()
                 pattern = pattern.strip('\r\n \t')
                 pattern = pattern.replace('.', '\.')
                 pattern = pattern.replace('*', '.*').replace('?', '.')

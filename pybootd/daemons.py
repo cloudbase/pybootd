@@ -23,11 +23,11 @@
 
 import os
 import sys
-from pxed import BootpServer
+from pybootd.pxed import BootpServer
 from pybootd import pybootd_path, PRODUCT_NAME, __version__ as VERSION
 from six import print_
-from tftpd import TftpServer
-from util import logger_factory, EasyConfigParser
+from pybootd.tftpd import TftpServer
+from pybootd.util import logger_factory, EasyConfigParser
 from threading import Thread
 
 
@@ -90,11 +90,11 @@ def main():
         with open(pybootd_path(args.config), 'rt') as config:
             cfgparser.readfp(config)
 
-        logger = logger_factory(logtype=cfgparser.get('logger', 'type',
-                                                      'stderr'),
-                                logfile=cfgparser.get('logger', 'file'),
-                                level=cfgparser.get('logger', 'level',
-                                                    'info'))
+        logger = logger_factory(logtype=cfgparser.get_opt('logger', 'type',
+                                                          'stderr'),
+                                logfile=cfgparser.get_opt('logger', 'file'),
+                                level=cfgparser.get_opt('logger', 'level',
+                                                        'info'))
         logger.info('-'.join((PRODUCT_NAME, VERSION)))
 
         daemon = None
