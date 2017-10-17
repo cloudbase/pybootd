@@ -396,7 +396,7 @@ class TftpServer:
         self.bootpd = bootpd
         self.blocksize = int(self.config.get('tftp', 'blocksize', '512'))
         self.timeout = float(self.config.get('tftp', 'timeout', '2.0'))
-        self.retry = int(self.config.get('tftp', 'blocksize', '5'))
+        self.retry = int(self.config.get('tftp', 'retry', '5'))
         self.root = self.config.get('tftp', 'root', os.getcwd())
         self.fcre, self.filepatterns = self.get_file_filters()
         self.genfilecre = re.compile(r'\[(?P<name>[\w\.\-]+)\]')
