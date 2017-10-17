@@ -161,13 +161,14 @@ class TftpConnection(object):
                 key, value, options = options.split('\000', 2)
                 if key == 'blksize':
                     self.blocksize = int(value)
+                    self.log.debug('New blocksize: %s' % self.blocksize)
                 elif key == 'timeout':
                     self.timeout = float(value)
                 pkt[key] = value
         elif opcode == self.ACK:
-            block = pkt['block'] = unpack('!h', buf[2:4])[0]
+            block = pkt['block'] = unpack('!H', buf[2:4])[0]
         elif opcode == self.DATA:
-            block = pkt['block'] = unpack('!h', buf[2:4])[0]
+            block = pkt['block'] = unpack('!H', buf[2:4])[0]
             data = pkt['data'] = buf[4:]
         elif opcode == self.ERR:
             errnum = pkt['errnum'] = unpack('!h', buf[2:4])[0]
@@ -252,7 +253,7 @@ class TftpConnection(object):
         blocksize = self.blocksize
         block = self.blockNumber = self.blockNumber + 1
         lendata = len(data)
-        format = '!hh%ds' % lendata
+        format = '!HH%ds' % lendata
         pkt = pack(format, self.DATA, block, data)
         self.send(pkt)
         self.active = (len(data) == blocksize)
@@ -279,7 +280,7 @@ class TftpConnection(object):
         self.log.debug('send_ack')
         block = self.blockNumber
         self.blockNumber = self.blockNumber + 1
-        format = '!hh'
+        format = '!HH'
         pkt = pack(format, self.ACK, block)
         self.send(pkt)
 
